@@ -81,7 +81,7 @@ const App = ({ navigation }) => {
                 <View style={styles.screen}>
                     <Header isBright={isBright} navigation={navigation}/>
                 </View>
-                <FormCard isBright={isBright}/>
+                <FormCard isBright={isBright} navigation={navigation} />
                 
             </ScrollView>
         </>
@@ -90,7 +90,7 @@ const App = ({ navigation }) => {
 
 export default App;
 
-const FormCard = ({isBright}) => {
+const FormCard = ({isBright, navigation}) => {
     // classes = ['Walking', 'Downstairs', 'Jogging', 'Sitting', 'Standing', 'Upstairs', ]
     const [walkingGoal, setWalkingGoal] = useState(100);
     const [joggingGoal, setJoggingGoal] = useState(100);
@@ -127,27 +127,42 @@ const FormCard = ({isBright}) => {
         }
     }, [isBright]);
 
+    const handleSubmit = () => {
+        console.log('submitting')
+        return navigation.navigate('Home', {
+            walkingGoal: walkingGoal,
+            joggingGoal: joggingGoal,
+            sittingGoal: sittingGoal,
+            standingGoal: standingGoal,
+            screenTimeGoal: screenTimeGoal,
+        });
+    }
+
 
     return (
         <View style={styles.form}>
             <Formik
-                initialValues={{ name: '', email: '' }}
+                initialValues={{ walkingGoal: 100, joggingGoal: 100, sittingGoal: 100, standingGoal: 100, screenTimeGoal: 100 }}
                 validationSchema={Yup.object({
-                    name: Yup.string()
-                        .required('Required'),
-                    email: Yup.string()
-                        .email('Invalid Email')
-                        .required('Required'),
+                    walkingGoal: Yup.number(),
+                    joggingGoal: Yup.number(),
+                    sittingGoal: Yup.number(),
+                    standingGoal: Yup.number(),
+                    screenTimeGoal: Yup.number(),
+
                 })}
                 onSubmit={(values, formikActions) => {
                     setTimeout(() => {
-                        Alert.alert(JSON.stringify(values));
+                        // Alert.alert(JSON.stringify(values));
                         // Important: Make sure to setSubmitting to false so our loading indicator
                         // goes away.
+                        navigation.navigate('Home',{
+                            values: values
+                        });
                         formikActions.setSubmitting(false);
-                    }, 500);
+                    }, 1000);
                 }}>
-                {props => (console.log(props) ||
+                {props => (
                     <View>
                         <Text style={[styles.label, { color: color_ }]}>
                             Walking {walkingGoal} mins

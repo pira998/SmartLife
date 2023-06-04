@@ -67,8 +67,12 @@ console.disableYellowBox = true;
 
 
 
-const App = ({navigation}) => {
-
+const App = ({routes, navigation}) => {
+  console.info(navigation, "navigation")
+  console.info(routes, "routes")
+  if (routes) {
+  
+}
 
   const [{ illuminance }, setIData] = useState({ illuminance: 0 });
   const [{ pressure, relativeAltitude }, setBData] = useState({ pressure: 0, relativeAltitude: 0 });
@@ -511,86 +515,90 @@ const Banner = () => {
     return () => clearInterval(interval);
   }, [a100Data]);
 
+  const [barometerData, setBarometerData] = useState({ pressure: 0 });
+  const [subscriptionBarometer, setSubscriptionBarometer] = useState(null);
+  const [barometer100Data, setBarometer100Data] = useState([]);
+
+  const _subscribeBarometer = () => {
+    setSubscriptionBarometer(
+      Barometer.addListener(barometerData => {
+        setBarometerData(barometerData);
+      })
+    );
+  };
+
+  const _unsubscribeBarometer = () => {
+    subscriptionBarometer && subscriptionBarometer.remove();
+    setSubscriptionBarometer(null);
+  };
+
+  // store only the last 100 barometer readings
+  useEffect(() => {
+    if (barometer100Data.length < 100) {
+      setBarometer100Data([...barometer100Data, barometerData])
+      // console.log('reading barometer data')
+    } else {
+      setBarometer100Data([...barometer100Data.slice(1), barometerData])
+    }
+  }, [barometerData])
+
+  // check sudden drop in pressure (bad air quality)
+
+  const isSuddenDrop = () => {
+    let suddenDrop = false;
+    for (let i = 0; i < barometer100Data.length - 1; i++) {
+      if (barometer100Data[i].pressure - barometer100Data[i + 1].pressure > 5) {
+        suddenDrop = true;
+      }
+    }
+    return suddenDrop;
+  }
 
 
 
-  // useEffect(() => {
-  //   let isMounted = true;
 
-  //   // Accelerometer sensor
-  //   const subscribeAccelerometer = () => {
-  //     Accelerometer.addListener(accelerometerData => {
-  //       // Perform activity recognition based on accelerometer data
-  //       if (accelerometerData.y > .90) {
-  //         setActivity('Running');
-  //         setBannerColor('#a2d2ff');
-  //         setActivityImage(running);
-  //       } else if (accelerometerData.y > 0.65) {
-  //         setActivity('Jumping');
-  //         setBannerColor('#ffc8dd');
-  //         setActivityImage(climbing);
-  //       } else if (accelerometerData.z < 0.95 && accelerometerData.z > 0.75) {
-  //         setActivity('Sitting');
-  //         setBannerColor('#b8e9df');
-  //         setActivityImage(sitting);
-  //       } else if (accelerometerData.y > 0.15 && accelerometerData.z > 0.80) {
-  //         setActivity('Walking');
-  //         setBannerColor('#cdb4db');
-  //         setActivityImage(walking);
-  //       } else {
-  //         setActivity('Resting');
-  //         setBannerColor('#b8e9df');
-  //         setActivityImage(sitting);
-  //       }
-  //     });
-  //     Accelerometer.setUpdateInterval(100); // Update interval in milliseconds
-  //   };
 
-  //   // Barometer sensor
-  //   const subscribeBarometer = () => {
-  //     Barometer.addListener(barometerData => {
-  //       // Perform activity recognition based on barometer data
-  //       if (barometerData.pressure > 1010) {
-  //         setActivity('Descending stairs');
-  //       } else {
-  //         setActivity('Climbing stairs');
-  //       }
-  //     });
-  //     Barometer.setUpdateInterval(1000); // Update interval in milliseconds
-  //   };
+  useEffect(() => {
+    _subscribeBarometer();
+    return () => _unsubscribeBarometer();
 
-  //   // Start sensor subscriptions
-  //   subscribeAccelerometer();
-  //   subscribeBarometer();
+  }, []);
 
-  //   return () => {
-  //     isMounted = false;
-  //     Accelerometer.removeAllListeners();
-  //     Barometer.removeAllListeners();
-  //   };
-  // }, []);
+  useEffect(() => {
+    if (isSuddenDrop()) {
+      setEnvironment('On Polluted Place');
+    } else {
+      setEnvironment('On Quiet Place');
+    }
+  }, [barometer100Data])
   // 'Downstairs', 'Jogging', 'Sitting', 'Standing', 'Upstairs', 'Walking'
   useEffect(() => {
     let isMounted = true;
     if (activity === 'Jogging') {
       setBannerColor('#a2d2ff');
       setActivityImage(running);
+      // save duration of activity
     } else if (activity === 'Upstairs') {
       setBannerColor('#ffc8dd');
       setActivityImage(climbing);
+      // save duration of activity
     } else if (activity === 'Sitting') {
       setBannerColor('#b8e9df');
       setActivityImage(sitting);
+      // save duration of activity
     } else if (activity === 'Walking') {
       setBannerColor('#cdb4db');
       setActivityImage(walking);
+      // save duration of activity
     } else if (activity === 'Standing') {
       setBannerColor('#ffeac5');
       setActivityImage(standing);
+      // save duration of activity
     }
     else {
       setBannerColor('#b8e9df');
       setActivityImage(sitting);
+      // save duration of activity
     }
     return () => {
       isMounted = false;
@@ -734,7 +742,7 @@ const data = [
     darkColor: '#8860a2',
   },
   {
-    name: 'Running',
+    name: 'Jogging',
     status: 55,
     day: '1',
     time: '50',
