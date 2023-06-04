@@ -4,12 +4,12 @@ Certainly! Here's an example of a README file for your project:
 ## Screenshots
 
 - Add screenshots of your app here to showcase its functionality and user interface. For example:
-
-![Screenshot 1](screenshots/Home.jpg)
-*This is the home screen of the app.*
-
-![Screenshot 2](screenshots/Edit.jpg)
-*This is the edit screen of the app.*
+<!-- set width  100px-->
+<p float="left">
+<!-- ![Screenshot 1](screenshots/Home.jpg |width="100px") -->
+<img src='screenshots/Home.jpg' width='400px'/>
+<img src='screenshots/Edit.jpg' width='400px'/>
+</p>
 
 # Sensor Data Collection and Action Recognition
 
