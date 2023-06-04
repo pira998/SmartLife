@@ -1,12 +1,22 @@
 
 Certainly! Here's an example of a README file for your project:
 
+## Screenshots
+
+- Add screenshots of your app here to showcase its functionality and user interface. For example:
+
+![Screenshot 1](screenshots/Home.jpg)
+*This is the home screen of the app.*
+
+![Screenshot 2](screenshots/Edit.jpg)
+*This is the edit screen of the app.*
 
 # Sensor Data Collection and Action Recognition
 
 This project demonstrates how to collect sensor data from mobile sensors (Accelerometer, DeviceMotion, Gyroscope) in a React Native Expo app and perform action recognition using a pre-trained model.
 
 The app collects sensor data for a specific duration and then uses the collected data to make predictions on the recognized action. The predicted action is based on the highest value in the output array from the model.
+
 
 ## Features
 
@@ -71,16 +81,6 @@ expo start
 5. The app will start collecting sensor data for the specified duration.
 6. After collecting the data, the app will use the pre-trained model to predict the action based on the collected sensor data.
 7. The predicted action will be displayed in the console log.
-
-## Screenshots
-
-- Add screenshots of your app here to showcase its functionality and user interface. For example:
-
-![Screenshot 1](screenshots/screenshot1.png)
-*Caption for Screenshot 1*
-
-![Screenshot 2](screenshots/screenshot2.png)
-*Caption for Screenshot 2*
 
 
 ## License

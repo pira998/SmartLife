@@ -81,7 +81,7 @@ const App = ({ navigation }) => {
                 <View style={styles.screen}>
                     <Header isBright={isBright} navigation={navigation}/>
                 </View>
-                <FormCard/>
+                <FormCard isBright={isBright}/>
                 
             </ScrollView>
         </>
@@ -90,13 +90,14 @@ const App = ({ navigation }) => {
 
 export default App;
 
-const FormCard = (props) => {
+const FormCard = ({isBright}) => {
     // classes = ['Walking', 'Downstairs', 'Jogging', 'Sitting', 'Standing', 'Upstairs', ]
     const [walkingGoal, setWalkingGoal] = useState(100);
     const [joggingGoal, setJoggingGoal] = useState(100);
     const [sittingGoal, setSittingGoal] = useState(100);
     const [standingGoal, setStandingGoal] = useState(100);
     const [screenTimeGoal, setScreenTimeGoal] = useState(100);
+    const [color_, setColor] = useState('white');
 
     const handleWalkingSliderChange = (value) => {
         setWalkingGoal(value);
@@ -117,6 +118,15 @@ const FormCard = (props) => {
     const handleScreenTimeSliderChange = (value) => {
         setScreenTimeGoal(value);
     };
+
+    useEffect(() => {
+        if (isBright) {
+            setColor('white');
+        } else {
+            setColor('black');
+        }
+    }, [isBright]);
+
 
     return (
         <View style={styles.form}>
@@ -139,7 +149,7 @@ const FormCard = (props) => {
                 }}>
                 {props => (console.log(props) ||
                     <View>
-                        <Text>
+                        <Text style={[styles.label, { color: color_ }]}>
                             Walking {walkingGoal} mins
                         </Text>
                         <Slider
@@ -153,7 +163,7 @@ const FormCard = (props) => {
                             onValueChange={handleWalkingSliderChange}
                         />
 
-                        <Text>
+                        <Text style={[styles.label, { color: color_ }]}>
                             Jogging {joggingGoal} mins
                         </Text>
                         <Slider
@@ -167,7 +177,7 @@ const FormCard = (props) => {
                             onValueChange={handleJoggingSliderChange}
                         />
 
-                        <Text>
+                        <Text style={[styles.label, { color: color_ }]}>
                             Sitting {sittingGoal} mins
                         </Text>
                         <Slider
@@ -181,7 +191,7 @@ const FormCard = (props) => {
                             onValueChange={handleSittingSliderChange}
                         />
 
-                        <Text>
+                        <Text style={[styles.label, { color: color_ }]}>
                             Standing {standingGoal} mins
                         </Text>
                         <Slider
@@ -195,7 +205,7 @@ const FormCard = (props) => {
                             onValueChange={handleStandingSliderChange}
                         />
 
-                        <Text >
+                        <Text style={[styles.label, { color: color_ }]}>
                             Total Screen Time {screenTimeGoal} mins
                         </Text>
                         <Slider
