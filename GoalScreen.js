@@ -18,7 +18,7 @@ import { Formik, ErrorMessage } from 'formik';
 import Slider from '@react-native-community/slider';
 import * as Yup from 'yup';
 
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import "./ignoreWarnings";
 
 
@@ -61,7 +61,7 @@ const App = ({ navigation }) => {
         }
         if (illuminance) {
             setIlluminanceValues(illuminanceValues => [...illuminanceValues, illuminance]);
-            console.log('Illuminance : ', illuminanceValues)
+            // console.log('Illuminance : ', illuminanceValues)
         }
 
 
@@ -127,6 +127,19 @@ const FormCard = ({isBright, navigation}) => {
         }
     }, [isBright]);
 
+    const setValueInStorage = async () => {
+        try {
+            await AsyncStorage.setItem('walkingGoal', walkingGoal.toString());
+            await AsyncStorage.setItem('joggingGoal', joggingGoal.toString());
+            await AsyncStorage.setItem('sittingGoal', sittingGoal.toString());
+            await AsyncStorage.setItem('standingGoal',  standingGoal.toString());
+            await AsyncStorage.setItem('screenTimeGoal', screenTimeGoal.toString());
+            // setValue(newValue);
+        } catch (error) {
+            console.log('Error storing value in local storage:', error);
+        }
+    };
+
     const handleSubmit = () => {
         console.log('submitting')
         return navigation.navigate('Home', {
@@ -156,6 +169,7 @@ const FormCard = ({isBright, navigation}) => {
                         // Alert.alert(JSON.stringify(values));
                         // Important: Make sure to setSubmitting to false so our loading indicator
                         // goes away.
+                        setValueInStorage();
                         navigation.navigate('Home',{
                             values: values
                         });

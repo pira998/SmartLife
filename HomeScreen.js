@@ -24,8 +24,7 @@ import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
 import ActivityButton from './ActivityButton';
 import { Entypo } from '@expo/vector-icons'; 
-
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const headerImage = require('./assets/images/header.jpg');
@@ -61,6 +60,7 @@ const badair = require('./assets/images/badair.jpeg');
 
 
 import {useFonts} from 'expo-font';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 console.disableYellowBox = true;
 
 
@@ -68,16 +68,70 @@ console.disableYellowBox = true;
 
 
 const App = ({routes, navigation}) => {
-  console.info(navigation, "navigation")
-  console.info(routes, "routes")
+  // console.info(navigation, "navigation")
+  // console.info(routes, "routes")
   if (routes) {
   
 }
 
   const [{ illuminance }, setIData] = useState({ illuminance: 0 });
+  const [usageTime, setUsageTime] = useState(0);
   const [{ pressure, relativeAltitude }, setBData] = useState({ pressure: 0, relativeAltitude: 0 });
   const [subscription, setSubscription] = useState(null);
+  const [walkingGoal, setWalkingGoal] = useState(100);
+  const [joggingGoal, setJoggingGoal] = useState(100);
+  const [sittingGoal, setSittingGoal] = useState(100);
+  const [standingGoal, setStandingGoal] = useState(100);
+  const [screenTimeGoal, setScreenTimeGoal] = useState(100);
   LightSensor.setUpdateInterval(1000);
+
+
+  const [value, setValue] = useState('');
+
+  const getValue = async () => {
+    try {
+      const goals = ['walkingGoal', 'joggingGoal', 'sittingGoal', 'standingGoal', 'screenTimeGoal'
+    ]
+      goals.forEach(async (goal) => {
+        const storedValue = await AsyncStorage.getItem(goal);
+        // console.log('storedValue: ', storedValue) 
+        if (storedValue !== null || storedValue !== '[object Undefined]') {
+          switch (goal) { 
+            case 'walkingGoal':
+              setWalkingGoal(storedValue);
+              break;
+            case 'joggingGoal':
+              setJoggingGoal(storedValue);
+              break;
+            case 'sittingGoal':
+              setSittingGoal(storedValue);
+              break;
+            case 'standingGoal':
+              setStandingGoal(storedValue);
+              break;
+            case 'screenTimeGoal':
+              setScreenTimeGoal(storedValue);
+              break;
+            default:
+              break;
+          }
+        }
+      })
+    } catch (error) {
+      console.log('Error retrieving value from local storage:', error);
+    }
+  };
+
+  // check freqently storage value and update the state
+  useEffect(() => {
+    const interval = setInterval(() => {
+      getValue();
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
 
   const _subscribe = () => {
     setSubscription(
@@ -107,7 +161,7 @@ const App = ({routes, navigation}) => {
     }
     if (illuminance) {
       setIlluminanceValues(illuminanceValues => [...illuminanceValues, illuminance]);
-      console.log('Illuminance : ', illuminanceValues)
+      // console.log('Illuminance : ', illuminanceValues)
     }
     
 
@@ -123,18 +177,18 @@ const App = ({routes, navigation}) => {
 
   async function startRecording() {
     try {
-      console.log('Requesting permissions..');
+      // console.log('Requesting permissions..');
       await Audio.requestPermissionsAsync();
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
 
-      console.log('Starting recording..');
+      // console.log('Starting recording..');
       const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
       setRecording(recording);
-      console.log('Recording started');
+      // console.log('Recording started');
     } catch (err) {
       console.error('Failed to start recording', err);
     }
@@ -175,8 +229,6 @@ const App = ({routes, navigation}) => {
     subscription.remove();
   };
   
-
-
   return (
     <>
       <StatusBar style={isBright ? 'light' : 'dark'} backgroundColor={isBright ? '#35363a' : 'white'}/>
@@ -190,7 +242,7 @@ const App = ({routes, navigation}) => {
           <Text style={[styles.label,{color: isBright? 'white' : 'black'}]}>Your Activities</Text>
           <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
             {data.map((item, index) => (
-              <Card key={index} data={item} index={index} isBright={isBright}/>
+              <Card key={index} data={item} index={index} isBright={isBright} goals={ {"Walking": walkingGoal, "Jogging": joggingGoal, "Sitting": sittingGoal, "Standing": standingGoal} }/>
             ))}
           </ScrollView>
         
@@ -216,7 +268,7 @@ const App = ({routes, navigation}) => {
               <Environment key={index}  index={index} image={item.image} name={item.name} isBright={isBright} data={item} />
             ))}
           </ScrollView>
-          <ScreenTimer isBright={isBright} />
+          <ScreenTimer isBright={isBright} usageTime={100} screenTimeGoal={screenTimeGoal}/>
         </View>
       </ScrollView>
     </>
@@ -225,18 +277,18 @@ const App = ({routes, navigation}) => {
 
 export default App;
 
-const ScreenTimer = ({isBright, }) => {
+const ScreenTimer = ({isBright, usageTime, screenTimeGoal}) => {
 
   const wellbeing = require('./assets/images/wellbeing.png');
   return (
     <View style={[styles.footer, { backgroundColor: isBright ? '#35363a' : 'white' }]}>
       <View style={{  alignItems: 'center', marginHorizontal: 30 }}>
         <Text style={[styles.label, { color: isBright ? 'white' : 'black' }]}>Screen Time</Text>
-        <Text style={{ color: "#ff6b6b", fontSize:30 }}>{"2"} hrs {"30"} mins</Text>
+        <Text style={{ color: "#ff6b6b", fontSize: 30 }}>{'2'} hrs {"30"} mins</Text>
       </View>
-      <ProgressCircle percent={30} radius={45} borderWidth={8} color="#ff6b6b" shadowColor="#999" bgColor={isBright ? '#35363a' : 'white'}>
+      <ProgressCircle percent={parseInt(usageTime / screenTimeGoal * 100)} radius={45} borderWidth={8} color="#ff6b6b" shadowColor="#999" bgColor={isBright ? '#35363a' : 'white'}>
         <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-          <Text style={{ fontSize: 18, color: isBright ? 'white' : 'black' }}>{"30"}%</Text>
+          <Text style={{ fontSize: 18, color: isBright ? 'white' : 'black' }}>{parseInt(usageTime / screenTimeGoal * 100)}%</Text>
         </View>
       </ProgressCircle>
       
@@ -338,7 +390,20 @@ const Environment = ({index,image,name,isBright,data}) => (
   </View>
 );
 
-const Card = ({data, index, isBright}) => {
+const Card = ({data, index, isBright, goals}) => {
+
+  progress = (data, goals) => {
+    if (data.name == "Walking") {
+      return (data.time / goals.Walking) * 100;
+    } else if (data.name == "Jogging") {
+      return (data.time / goals.Jogging) * 100;
+    } else if (data.name == "Sitting") {
+      return (data.time / goals.Sitting) * 100;
+    } else if (data.name == "Cycling") {
+      return (data.time / goals.Standing) * 100;
+    } 
+    
+  }
   return (
     <View
       style={{
@@ -360,7 +425,7 @@ const Card = ({data, index, isBright}) => {
       <Image source={data.image} style={{height: 25, width: 25}} />
       <View style={{alignSelf: 'center', margin: 5}}>
         <ProgressCircle
-          percent={data.status}
+          percent={parseInt(progress(data, goals))}
           radius={25}
           borderWidth={5}
           color="#3399FF"
@@ -368,7 +433,7 @@ const Card = ({data, index, isBright}) => {
           borderColor="#ededed"
           bgColor={isBright? data.color: data.darkColor}
         >
-          <Text style={{ fontSize: 15 }}>{data.status}%</Text>
+          <Text style={{ fontSize: 15 }}>{parseInt(progress(data,goals))}%</Text>
         </ProgressCircle>
       </View>
       <View>
@@ -480,7 +545,7 @@ const Banner = () => {
 
   const handlePredict = async () => {
     try {
-      console.log('Predicting...')
+      // console.log('Predicting...')
       const sensorData = {
         accelerometer: a100Data,
         gyroscope: g100Data,
@@ -488,27 +553,27 @@ const Banner = () => {
       }
       const predictions = await ApiService.predict([sensorData]);
 
-      console.log('Predictions: ', predictions);
+      // console.log('Predictions: ', predictions);
       setPredictions(predictions);
       setActivity(predictions[0]);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   };
 
   // do handlePredict every 1000 ms and check a100Data.length === 100
   useEffect(() => {
-    console.log('a100Data.length: ', a100Data.length)
-    console.log('g100Data.length: ', g100Data.length)
-    console.log('d100Data.length: ', d100Data.length)
+    // console.log('a100Data.length: ', a100Data.length)
+    // console.log('g100Data.length: ', g100Data.length)
+    // console.log('d100Data.length: ', d100Data.length)
     if (a100Data.length === 100 && g100Data.length === 100 && d100Data.length === 100) {
-      handlePredict();
+      // handlePredict();
     }
 
     const interval = setInterval(async () => {
 
-        console.log('doing handlePredict')
-        await handlePredict();
+        // console.log('doing handlePredict')
+        // await handlePredict();
       
 
     }, 1000);
